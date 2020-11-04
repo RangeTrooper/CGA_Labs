@@ -1,0 +1,11 @@
+**/bin
+**/obj
+**/Properties
+*.config
+*.csproj
+*.resx
+*.Designer.cs
+*/.vs
+*.pdf
+*.txt
+/acg_1
