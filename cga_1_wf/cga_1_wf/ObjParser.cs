@@ -9,18 +9,20 @@ using System.Globalization;
 using System.Windows;
 using System.Drawing;
 using MyExtensions;
+using System.Windows.Forms;
 
 namespace cga_1_wf
 {
 
     public class ObjParser
     {
-       
+        private const double DELTA_ANGLE = 0.01d;
 
         public List<double[]> vertexes = new List<double[]>();
         public List<double[]> textures = new List<double[]>();
         public List<List<List<int>>> faces = new List<List<List<int>>>();
 
+        List<Vector4> vertexes_2;
 
         public int WINDOW_WIDTH;
         public int WINDOW_HEIGHT;
@@ -29,13 +31,20 @@ namespace cga_1_wf
         //public double aspect = WINDOW_WIDTH/WINDOW_HEIGHT;
         public double zFar = 1000, zNear = 0.3;
 
-        
+        double angleY, angleX;
 
         public Vector3 camera = new Vector3(0, 0, 1000);
         public Vector3 up = new Vector3(0, 1, 0);
         public Vector3 target = new Vector3(0, 0, 0);
         public Matrix4x4 worldToView;
         public Matrix4x4 origin = new Matrix4x4(
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            );
+
+        public Matrix4x4 translationMatrix = new Matrix4x4(
                 1, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
@@ -49,6 +58,30 @@ namespace cga_1_wf
                 0, 0, 0, 1
             );
 
+        public Matrix4x4 rotationMatrixX = new Matrix4x4(
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            );
+
+        public Matrix4x4 rotationMatrixY = new Matrix4x4(
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            );
+
+        public Matrix4x4 rotationMatrixZ = new Matrix4x4(
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            );
+
+        private Matrix4x4 viewToProjection;
+        private Matrix4x4 projectionToViewport;
+
 
         public ObjParser(int width, int height)
         {
@@ -57,19 +90,9 @@ namespace cga_1_wf
             this.zNear = WINDOW_WIDTH / 2;
         }
 
-        private void translateToOrigin()
-        {
-            foreach (double[] verts in vertexes)
-            {
-
-            }
-        }
 
         private Bitmap SetUpCamera()
         {
-            //aspect = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
-            //Vector4 testVector = new Vector4(3, 10, 12, 6);
-            //testVector = Vector4.Transform(testVector, scaleMatrix);
             Vector3 target = new Vector3(0, 0, 0);
             Vector3 axisZ = Vector3.Normalize(Vector3.Subtract(camera, target));
             Vector3 axisX = Vector3.Normalize(Vector3.Cross(up, axisZ));
@@ -82,85 +105,36 @@ namespace cga_1_wf
                     );
             Vector4 temp;
 
-            List<Vector4> vertexes_2 = new List<Vector4>();
+            vertexes_2 = new List<Vector4>();
             
-           foreach (double[] vertex in vertexes)
+            foreach (double[] vertex in vertexes)
             {
                 if (vertex.Length == 3)
                     temp = new Vector4((float)vertex[0], (float)vertex[1], (float)vertex[2], 1);
                 else
                     temp = new Vector4((float)vertex[0], (float)vertex[1], (float)vertex[2], (float)vertex[3]);
-                //temp = Vector4.Transform(temp, scaleMatrix);
                 
                 vertexes_2.Add(temp);
             }
 
-           /* for (int i = 0; i < vertexes_2.Count; i++)
-            {
-                vertexes_2[i] = Vector4.Transform(vertexes_2[i], worldToView);
-            }*/
 
             ///Добавить деление на w для кривых линий
-            Matrix4x4 viewToProjection = new Matrix4x4(
+            viewToProjection = new Matrix4x4(
                     (float)(2f * zNear/ WINDOW_WIDTH), 0, 0, 0,
                     0, (float)(2f * zNear / WINDOW_HEIGHT), 0, 0,
                     0, 0, (float)(zFar / (zNear - zFar)), (float)(zNear * zFar / (zNear - zFar)),
                     0, 0, -1, 0
                 );
 
-            /*Matrix4x4 viewToProjection = new Matrix4x4(
-                     (float)(1f / ( Math.Tan((75f * Math.PI )/ 360f))), 0, 0, 0,
-                     0, (float)(1f / Math.Tan((45f * Math.PI) / 360f)), 0, 0,
-                     0, 0, -(float)((zFar + zNear )/ (zFar - zNear)), -(float)(2f* zNear * zFar / (zFar - zNear)),
-                     0, 0, -1, 0
-                 );*/
-
-/*            float xMin = vertexes_2[0].X, yMin = vertexes_2[0].Y;
-            for (int i = 0; i < vertexes_2.Count; i++)
-            {
-                vertexes_2[i] = Vector4.Transform(vertexes_2[i], viewToProjection);
-                vertexes_2[i] = Vector4.Divide(vertexes_2[i], vertexes_2[i].W);
-            }*/
-
-
-
-
-            Matrix4x4 projectionToViewport = new Matrix4x4(
+       
+            projectionToViewport = new Matrix4x4(
                     (float)(WINDOW_WIDTH / 2f), 0, 0, (float)(WINDOW_WIDTH / 2f),
                     0, -(float)(WINDOW_HEIGHT / 2f), 0,(float)(WINDOW_HEIGHT / 2f),
                     0, 0, 1, 0,
                     0, 0, 0, 1
 
                 );
-            /* for (int i = 0; i < vertexes_2.Count; i++)
-             {
-                 vertexes_2[i] = Vector4.Transform(vertexes_2[i], projectionToViewport);
-             }*/
 
-            //Matrix4x4 resultMatrix = Matrix4x4.Multiply(viewToProjection, worldToView);
-            //resultMatrix = Matrix4x4.Multiply(resultMatrix, worldToView);
-            //resultMatrix = Matrix4x4.Multiply(resultMatrix, scaleMatrix);
-
-
-            /*for (int i = 0; i < vertexes_2.Count; i++)
-            {
-                vertexes_2[i] = Vector4.Transform(vertexes_2[i], resultMatrix);
-                vertexes_2[i] = Vector4.Divide(vertexes_2[i], vertexes_2[i].W);
-            }*/
-            /*
-             * 
-             * 
-            resultMatrix = Matrix4x4.Multiply(projectionToViewport, viewToProjection);
-            resultMatrix = Matrix4x4.Multiply(resultMatrix, worldToView);
-            resultMatrix = Matrix4x4.Multiply(resultMatrix, scaleMatrix);
-            //vertexes_2.Clear();
-            foreach (double[] vertex in vertexes)
-            {
-                Vector4 temp2 = new Vector4((float)vertex[0], (float)vertex[1], (float)vertex[2], 1);
-                temp2 = Vector4.Transform(temp2, resultMatrix);
-                temp2 = Vector4.Divide(temp2, temp2.W);
-                vertexes_2.Add(temp2);
-            }*/
             for (int i = 0; i < vertexes_2.Count; i++)
             {
                 //vertexes_2[i] = Vector4.Transform(vertexes_2[i], scaleMatrix);
@@ -260,13 +234,7 @@ namespace cga_1_wf
 
         private Bitmap DrawEdges(List<Vector4> vertexes_2, Bitmap bmp)
         {
-            //Bitmap bmp = new Bitmap(WINDOW_WIDTH, WINDOW_HEIGHT);
-            //Graphics gfx = Graphics.FromImage(bmp);
-            //SolidBrush brush = new SolidBrush(System.Drawing.Color.White);
             
-             //   gfx.FillRectangle(brush, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-            
-            //foreach (List<List<int>> array in faces)
             for (int j = 0; j < faces.Count; j++)
             {
                 List<List<int>> array = faces[j];
@@ -278,7 +246,7 @@ namespace cga_1_wf
                         try
                         {
                             //UseBresenhahm((int)vertexes_2[temp[0]].X, (int)vertexes_2[temp[0]].Y, (int)vertexes_2[array[0][0]].X, (int)vertexes_2[array[0][0]].X, bmp);
-                            line((int)vertexes_2[temp[0]].X, (int)vertexes_2[temp[0]].Y, (int)vertexes_2[array[0][0]].X, (int)vertexes_2[array[0][0]].Y, bmp);
+                            line((int)vertexes_2[temp[0] -1].X, (int)vertexes_2[temp[0] -1].Y, (int)vertexes_2[array[0][0] -1 ].X, (int)vertexes_2[array[0][0] -1].Y, bmp);
                         }
                         catch(ArgumentOutOfRangeException e)
                         {
@@ -304,23 +272,6 @@ namespace cga_1_wf
             //MainWindow.RedrawCanvas(image);
         }
 
-
-        private void UseBresenhahm(int x0, int y0, int x1, int y1, Bitmap bmp)
-        {
-
-            int dx = Math.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-            int dy = Math.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-            int err = (dx > dy ? dx : -dy) / 2, e2;
-            for (; ; )
-            {
-                if (Math.Abs(x0) < WINDOW_WIDTH && Math.Abs(y0) < WINDOW_HEIGHT)
-                    bmp.SetPixel(Math.Abs(x0), Math.Abs(y0), System.Drawing.Color.IndianRed);
-                if (x0 == x1 && y0 == y1) break;
-                e2 = err;
-                if (e2 > -dx) { err -= dy; x0 += sx; }
-                if (e2 < dy) { err += dx; y0 += sy; }
-            }
-        }
 
         public void line(int x, int y, int x2, int y2, Bitmap bmp)
         {
@@ -359,43 +310,88 @@ namespace cga_1_wf
             }
         }
 
-        private void PutPixel(int x, int y, Bitmap bmp)
+        public void ZoomIn(PictureBox pb)
         {
-            
-            try
+            //translationMatrix.M34 += 15;
+            camera.Z -= 15;
+            SetWorldToViewMatrix();
+            pb.Image = Draw();
+        }
+
+        public void ZoomOut(PictureBox pb)
+        {
+            camera.Z += 15;
+            SetWorldToViewMatrix();
+            pb.Image = Draw();
+        }
+
+        private void SetWorldToViewMatrix()
+        {
+            Vector3 target = new Vector3(0, 0, 0);
+            Vector3 axisZ = Vector3.Normalize(Vector3.Subtract(camera, target));
+            Vector3 axisX = Vector3.Normalize(Vector3.Cross(up, axisZ));
+            Vector3 axisY = up;
+            worldToView = new Matrix4x4(
+                    axisX.X, axisX.Y, axisX.Z, -Vector3.Dot(axisX, camera),
+                    axisY.X, axisY.Y, axisY.Z, -Vector3.Dot(axisY, camera),
+                    axisZ.X, axisZ.Y, axisZ.Z, -Vector3.Dot(axisZ, camera),
+                    0, 0, 0, 1
+                    );
+        }
+
+        public void Rotate(Point path, PictureBox pb)
+        {
+            angleY += path.X * DELTA_ANGLE;
+            angleX += path.Y * DELTA_ANGLE;
+
+            rotationMatrixY.M11 = (float)Math.Cos(angleY);
+            rotationMatrixY.M13 = (float)Math.Sin(angleY);
+            rotationMatrixY.M31 = -(float)Math.Sin(angleY);
+            rotationMatrixY.M33 = (float)Math.Cos(angleY);
+
+           rotationMatrixX.M22 = (float)Math.Cos(angleX);
+            rotationMatrixX.M23 = -(float)Math.Sin(angleX);
+            rotationMatrixX.M32 = (float)Math.Sin(angleX);
+            rotationMatrixX.M33 = (float)Math.Cos(angleX);
+
+            pb.Image = Draw();
+        }
+
+        private Bitmap Draw()
+        {
+            Bitmap bmp = new Bitmap(WINDOW_WIDTH, WINDOW_HEIGHT);
+            Graphics gfx = Graphics.FromImage(bmp);
+            SolidBrush brush = new SolidBrush(System.Drawing.Color.White);
+            gfx.FillRectangle(brush, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+            Vector4 temp;
+
+            vertexes_2.Clear();
+            foreach (double[] vertex in vertexes)
             {
-                bmp.SetPixel(x, y, System.Drawing.Color.Orange);
+                if (vertex.Length == 3)
+                    temp = new Vector4((float)vertex[0], (float)vertex[1], (float)vertex[2], 1);
+                else
+                    temp = new Vector4((float)vertex[0], (float)vertex[1], (float)vertex[2], (float)vertex[3]);
+                //temp = Vector4.Transform(temp, scaleMatrix);
+
+                vertexes_2.Add(temp);
             }
-            catch(Exception e)
-            {
 
+            for (int i = 0; i < vertexes_2.Count; i++)
+            {
+                vertexes_2[i] = vertexes_2[i].ApplyMatrix(scaleMatrix);
+                vertexes_2[i] = vertexes_2[i].ApplyMatrix(translationMatrix);
+                vertexes_2[i] = vertexes_2[i].ApplyMatrix(rotationMatrixX);
+                vertexes_2[i] = vertexes_2[i].ApplyMatrix(rotationMatrixY);
+                vertexes_2[i] = vertexes_2[i].ApplyMatrix(rotationMatrixZ);
+                vertexes_2[i] = vertexes_2[i].ApplyMatrix(worldToView);
+                vertexes_2[i] = vertexes_2[i].ApplyMatrix(viewToProjection);
+                vertexes_2[i] = Vector4.Divide(vertexes_2[i], vertexes_2[i].W);
+                vertexes_2[i] = vertexes_2[i].ApplyMatrix(projectionToViewport);
             }
 
-           /* try
-            {
-                bitmap.Lock();
-                unsafe
-                {
-                    IntPtr pBackBuffer = bitmap.BackBuffer;
-                    pBackBuffer += y * bitmap.BackBufferStride;
-                    pBackBuffer += x  * 4;
-
-                    int colorData = 255 << 16;
-                    colorData |= 128 << 8;
-                    colorData |= 255 << 0;
-
-                    Console.WriteLine(bitmap.PixelHeight);
-                    Console.WriteLine(bitmap.PixelWidth);
-                    *((int*)pBackBuffer) = colorData;
-                    
-
-                }
-                bitmap.AddDirtyRect(new Int32Rect(x, y, 1, 1));
-            }
-            finally
-            {
-                bitmap.Unlock();
-            }*/
+            return DrawEdges(vertexes_2, bmp);
         }
     }
 }
