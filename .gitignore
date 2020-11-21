@@ -9,3 +9,4 @@
 *.pdf
 *.txt
 /acg_1
+*/packages/

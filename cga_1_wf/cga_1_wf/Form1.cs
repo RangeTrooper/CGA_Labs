@@ -53,5 +53,41 @@ namespace cga_1_wf
         {
             mousePressed = false;
         }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                //y axis
+                case Keys.W:
+                    //mesh.Rotation = new Vector3(mesh.Rotation.X - deltaAngle, mesh.Rotation.Y, mesh.Rotation.Z);
+                    objParser.Rotate(-0.1d, 0, 0, pictureBox1);
+                    break;
+                case Keys.S:
+                    //mesh.Rotation = new Vector3(mesh.Rotation.X + deltaAngle, mesh.Rotation.Y, mesh.Rotation.Z);
+                    objParser.Rotate(0.1d, 0, 0, pictureBox1);
+                    break;
+
+                //x axis
+                case Keys.A:
+                    //mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y - deltaAngle, mesh.Rotation.Z);
+                    objParser.Rotate(0, -0.1d, 0, pictureBox1);
+                    break;
+                case Keys.D:
+                    //mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y + deltaAngle, mesh.Rotation.Z);
+                    objParser.Rotate(0, 0.1d, 0, pictureBox1);
+                    break;
+
+                //z axis
+                case Keys.Q:
+                    //mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y, mesh.Rotation.Z + deltaAngle);
+                    objParser.Rotate(0, 0, 0.1d, pictureBox1);
+                    break;
+                case Keys.E:
+                    //mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y, mesh.Rotation.Z - deltaAngle);
+                    objParser.Rotate(0, 0, -0.1d, pictureBox1);
+                    break;
+            }
+        }
     }
 }

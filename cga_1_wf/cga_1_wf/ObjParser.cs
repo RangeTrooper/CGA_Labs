@@ -31,7 +31,7 @@ namespace cga_1_wf
         //public double aspect = WINDOW_WIDTH/WINDOW_HEIGHT;
         public double zFar = 1000, zNear = 0.3;
 
-        double angleY, angleX;
+        double angleY, angleX, angleZ;
 
         public Vector3 camera = new Vector3(0, 0, 1000);
         public Vector3 up = new Vector3(0, 1, 0);
@@ -106,30 +106,30 @@ namespace cga_1_wf
             Vector4 temp;
 
             vertexes_2 = new List<Vector4>();
-            
+
             foreach (double[] vertex in vertexes)
             {
                 if (vertex.Length == 3)
                     temp = new Vector4((float)vertex[0], (float)vertex[1], (float)vertex[2], 1);
                 else
                     temp = new Vector4((float)vertex[0], (float)vertex[1], (float)vertex[2], (float)vertex[3]);
-                
+
                 vertexes_2.Add(temp);
             }
 
 
             ///Добавить деление на w для кривых линий
             viewToProjection = new Matrix4x4(
-                    (float)(2f * zNear/ WINDOW_WIDTH), 0, 0, 0,
+                    (float)(2f * zNear / WINDOW_WIDTH), 0, 0, 0,
                     0, (float)(2f * zNear / WINDOW_HEIGHT), 0, 0,
                     0, 0, (float)(zFar / (zNear - zFar)), (float)(zNear * zFar / (zNear - zFar)),
                     0, 0, -1, 0
                 );
 
-       
+
             projectionToViewport = new Matrix4x4(
                     (float)(WINDOW_WIDTH / 2f), 0, 0, (float)(WINDOW_WIDTH / 2f),
-                    0, -(float)(WINDOW_HEIGHT / 2f), 0,(float)(WINDOW_HEIGHT / 2f),
+                    0, -(float)(WINDOW_HEIGHT / 2f), 0, (float)(WINDOW_HEIGHT / 2f),
                     0, 0, 1, 0,
                     0, 0, 0, 1
 
@@ -143,7 +143,7 @@ namespace cga_1_wf
                 vertexes_2[i] = vertexes_2[i].ApplyMatrix(viewToProjection);
                 vertexes_2[i] = Vector4.Divide(vertexes_2[i], vertexes_2[i].W);
                 vertexes_2[i] = vertexes_2[i].ApplyMatrix(projectionToViewport);
-                
+
 
             }
             Bitmap bmp = new Bitmap(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -171,7 +171,7 @@ namespace cga_1_wf
             };
             foreach (string line in lines)
             {
-                
+
                 string[] literals = line.Trim().Split(' ');
                 switch (literals[0])
                 {
@@ -234,7 +234,7 @@ namespace cga_1_wf
 
         private Bitmap DrawEdges(List<Vector4> vertexes_2, Bitmap bmp)
         {
-            
+
             for (int j = 0; j < faces.Count; j++)
             {
                 List<List<int>> array = faces[j];
@@ -246,16 +246,16 @@ namespace cga_1_wf
                         try
                         {
                             //UseBresenhahm((int)vertexes_2[temp[0]].X, (int)vertexes_2[temp[0]].Y, (int)vertexes_2[array[0][0]].X, (int)vertexes_2[array[0][0]].X, bmp);
-                            line((int)vertexes_2[temp[0] -1].X, (int)vertexes_2[temp[0] -1].Y, (int)vertexes_2[array[0][0] -1 ].X, (int)vertexes_2[array[0][0] -1].Y, bmp);
+                            line((int)vertexes_2[temp[0] - 1].X, (int)vertexes_2[temp[0] - 1].Y, (int)vertexes_2[array[0][0] - 1].X, (int)vertexes_2[array[0][0] - 1].Y, bmp);
                         }
-                        catch(ArgumentOutOfRangeException e)
+                        catch (ArgumentOutOfRangeException e)
                         {
 
                         }
                     }
                     else
                     {
-                        line((int)vertexes_2[temp[0] - 1].X, (int)vertexes_2[temp[0] - 1].Y, (int)vertexes_2[array[i + 1][0] - 1].X, (int)vertexes_2[array[i + 1][0] - 1].Y,bmp);
+                        line((int)vertexes_2[temp[0] - 1].X, (int)vertexes_2[temp[0] - 1].Y, (int)vertexes_2[array[i + 1][0] - 1].X, (int)vertexes_2[array[i + 1][0] - 1].Y, bmp);
                     }
                 }
                 //проход по вершинам полигона
@@ -293,7 +293,7 @@ namespace cga_1_wf
             int numerator = longest >> 1;
             for (int i = 0; i <= longest; i++)
             {
-                if ((x < WINDOW_WIDTH)&& (x > 0) && (y < WINDOW_HEIGHT) && (y > 0))
+                if ((x < WINDOW_WIDTH) && (x > 0) && (y < WINDOW_HEIGHT) && (y > 0))
                     bmp.SetPixel(x, y, Color.Red);
                 numerator += shortest;
                 if (!(numerator < longest))
@@ -349,10 +349,34 @@ namespace cga_1_wf
             rotationMatrixY.M31 = -(float)Math.Sin(angleY);
             rotationMatrixY.M33 = (float)Math.Cos(angleY);
 
-           rotationMatrixX.M22 = (float)Math.Cos(angleX);
+            rotationMatrixX.M22 = (float)Math.Cos(angleX);
             rotationMatrixX.M23 = -(float)Math.Sin(angleX);
             rotationMatrixX.M32 = (float)Math.Sin(angleX);
             rotationMatrixX.M33 = (float)Math.Cos(angleX);
+
+            pb.Image = Draw();
+        }
+
+        public void Rotate(Double deltaX, Double deltaY, Double deltaZ, PictureBox pb)
+        {
+            angleX += deltaX;
+            angleY += deltaY;
+            angleZ += deltaZ;
+
+            rotationMatrixY.M11 = (float)Math.Cos(angleY);
+            rotationMatrixY.M13 = (float)Math.Sin(angleY);
+            rotationMatrixY.M31 = -(float)Math.Sin(angleY);
+            rotationMatrixY.M33 = (float)Math.Cos(angleY);
+
+            rotationMatrixX.M22 = (float)Math.Cos(angleX);
+            rotationMatrixX.M23 = -(float)Math.Sin(angleX);
+            rotationMatrixX.M32 = (float)Math.Sin(angleX);
+            rotationMatrixX.M33 = (float)Math.Cos(angleX);
+
+            rotationMatrixZ.M11 = (float)Math.Cos(angleZ);
+            rotationMatrixZ.M12 = -(float)Math.Sin(angleZ);
+            rotationMatrixZ.M21 = (float)Math.Sin(angleZ);
+            rotationMatrixZ.M22 = (float)Math.Cos(angleZ);
 
             pb.Image = Draw();
         }
